@@ -1,25 +1,20 @@
 'use strict';
 
 class CityData {
-  constructor({ rows, headers = [] }) {
-    this.headers = headers;
+  constructor({ rows, head = [] }) {
+    this.head = head;
     this.rows = rows;
   }
 
   static fromString(
     data,
-    options = {
-      rowDelimiter: '\n',
-      cellDelimiter: ',',
-      containsHeaders: true,
-    }
+    options = { rowDelim: '\n', cellDelim: ',', head: true }
   ) {
-    const rows = data.split(options.rowDelimiter);
-    const headers = options.containsHeaders ?
-      rows.shift().split(options.cellDelimiter) :
-      [];
-    const cells = rows.map((row) => row.split(options.cellDelimiter));
-    return new CityData({ headers, rows: cells });
+    const rows = data.split(options.rowDelim);
+    const head = options.head ? rows.shift() : [];
+    const headCells = head.split(options.cellDelim);
+    const rowCells = rows.map((row) => row.split(options.cellDelim));
+    return new CityData({ head: headCells, rows: rowCells });
   }
 }
 
@@ -46,27 +41,25 @@ class City {
 }
 
 class CityTable {
-  constructor({ rows, headers }) {
+  constructor({ rows, head }) {
     this.rows = rows;
-    this.headers = headers;
+    this.head = head;
   }
 
   sortByDensityPercent() {
     this.rows.sort((a, b) => b.densityPercent - a.densityPercent);
   }
 
-  format() {
+  format(options = { stringIndent: 20, numberIndent: 10 }) {
+    const { stringIndent, numberIndent } = options;
     const formattedRows = this.rows.map((row) => {
-      const name = row.name.padEnd(18),
-        population = row.population.toString().padStart(10),
-        area = row.area.toString().padStart(8),
-        density = row.density.toString().padStart(8),
-        country = row.country.padStart(18),
-        densityPercent =
-          'densityPercent' in row ?
-            row.densityPercent.toString().padStart(6) :
-            '';
-      return `${name}${population}${area}${density}${country}${densityPercent}`;
+      let result = row.name.padEnd(stringIndent);
+      result += row.population.toString().padStart(numberIndent);
+      result += row.area.toString().padStart(numberIndent);
+      result += row.density.toString().padStart(numberIndent);
+      result += row.country.padStart(stringIndent);
+      result += row.densityPercent.toString().padStart(numberIndent);
+      return result;
     });
     return formattedRows.join('\n');
   }
@@ -102,6 +95,6 @@ const cities = cityData.rows.map((item) => {
   const densityPercent = Math.round((parseInt(density) * 100) / maxDensity);
   return new City({ name, population, area, density, country, densityPercent });
 });
-const table = new CityTable({ rows: cities, headers: cityData.headers });
+const table = new CityTable({ rows: cities, head: cityData.head });
 table.sortByDensityPercent();
 console.log(table.format());
