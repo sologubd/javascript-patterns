@@ -1,4 +1,4 @@
 lint:
-	npx eslint ./src
+	npx eslint ./src --fix
 format:
 	npx prettier ./src --write
